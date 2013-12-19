@@ -89,7 +89,11 @@ class NER(object):
                 groupby(entities, key=itemgetter(0)))
         else: #inlineXML
             entities = self.__inlineXML_parse_entities(tagged_text)
-        return self.__collapse_to_dict(entities)
+
+        if self.collapse:
+            return self.__collapse_to_dict(entities)
+        else:
+            return [token for token in entities]
 
     def json_entities(self, text):
         """Return a JSON encoding of named entities in text.
@@ -103,12 +107,13 @@ class NER(object):
 class SocketNER(NER):
     """Stanford NER over simple TCP/IP socket."""
 
-    def __init__(self, host='localhost', port=1234, output_format='inlineXML'):
+    def __init__(self, host='localhost', port=1234, output_format='inlineXML', collapse=True):
         if output_format not in ('slashTags', 'xml', 'inlineXML'):
             raise ValueError('Output format %s is invalid.' % output_format)
         self.host = host
         self.port = port
         self.oformat = output_format
+        self.collapse = collapse
 
     def tag_text(self, text):
         """Tag the text with proper named entities token-by-token.
@@ -131,7 +136,8 @@ class HttpNER(NER):
     """Stanford NER using HTTP protocol."""
 
     def __init__(self, host='localhost', port=1234, location='/stanford-ner/ner',
-            classifier=None, output_format='inlineXML', preserve_spacing=True):
+            classifier=None, output_format='inlineXML', preserve_spacing=True,
+            collapse=True):
         if output_format not in ('slashTags', 'xml', 'inlineXML'):
             raise ValueError('Output format %s is invalid.' % output_format)
         self.host = host
@@ -140,6 +146,7 @@ class HttpNER(NER):
         self.oformat = output_format
         self.classifier = classifier
         self.spacing = preserve_spacing
+        self.collapse = collapse
 
     def tag_text(self, text):
         """Tag the text with proper named entities token-by-token.
